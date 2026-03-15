@@ -1,47 +1,78 @@
-@echo off 
-setlocal enbledalyexansion
-Color 3
-Title Chronomètre
+@echo off
+setlocal enabledelayedexpansion
+color 3
+title Stopwatch
 
-Set /a %seconde% =0
-Set /a %minute% =0
-Set /a %heure% =0
-Set /a %dochrono% =0
-Echo "!heure!":"!minute!":"!seconde!"
+set /a seconde=0
+set /a minute=0
+set /a heure=0
+set running=0
 
-Echo 1.start
-Echo 2.stop
-Echo 3.reset
-Echo 4.exit
-::if 60sec do 1m
-If %seconde% =60
-  Set /a %seconde% -=60
-  Set /a %minute% +=1
+:menu
+cls
+echo =========================
+echo        STOPWATCH
+echo =========================
+echo.
+echo Time: !heure!:!minute!:!seconde!
+echo.
+echo 1 - Start
+echo 2 - Stop
+echo 3 - Reset
+echo 4 - Exit
+echo.
 
-::if 60min do 1h
-If %minute% =60 (
-  Set /a %minute% -=60
-  Set /a %heure% +=1
+choice /c 1234 /n /m "Select option: "
 
-Set /p "choice"==""
+if errorlevel 4 exit
+if errorlevel 3 goto reset
+if errorlevel 2 goto stop
+if errorlevel 1 goto start
 
-If "choice"=="1" (
-  Set /p %dochrono% =1
-  :cycle
-  Timeout /t 1>nul
-  Set /a %seconde% +=1
-  If %dochrono% =1 goto cycle
+goto menu
+
+:start
+set running=1
+:chronoloop
+cls
+echo =========================
+echo        STOPWATCH
+echo =========================
+echo.
+echo Time: !heure!:!minute!:!seconde!
+echo.
+echo Press 2 to Stop, 3 to Reset, 4 to Exit
+echo.
+
+rem --- Incrément du temps ---
+set /a seconde+=1
+if !seconde! GEQ 60 (
+    set /a seconde-=60
+    set /a minute+=1
+)
+if !minute! GEQ 60 (
+    set /a minute-=60
+    set /a heure+=1
 )
 
-If "choice"=="2" set /a %dochrono% =0
+rem --- Pause 1 seconde ---
+timeout /t 1 >nul
 
-If "choice"=="3" (
-  Set /a %seconde% =0
-  Set /a %minute% =0
-  Set /a %heure% =0
-)
+rem --- Vérifie si l'utilisateur veut arrêter ou reset ---
+choice /c 234 /n /t 0 /d 0 >nul
+if errorlevel 4 exit
+if errorlevel 3 goto reset
+if errorlevel 2 goto stop
 
-If "choice"=="4" (
-  Start %userprofile%   seven_system/seven_menu.bat
-Exit
-)
+if !running! equ 1 goto chronoloop
+goto menu
+
+:stop
+set running=0
+goto menu
+
+:reset
+set /a seconde=0
+set /a minute=0
+set /a heure=0
+goto menu
